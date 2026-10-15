@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CROWDGUARD | Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="particles-bg"></div>
+    <div class="cg-container">
+        
+        <!-- HEADER -->
+        <header class="cg-header glass-panel">
+            <div class="cg-header-left">
+                <h1>CROWDGUARD</h1>
+                <div class="cg-subtitle">REAL-TIME CROWD SAFETY INTELLIGENCE</div>
+            </div>
+            <div class="cg-header-center">
+                <div class="status-indicator"><span class="pulse-dot live-dot"></span> LIVE</div>
+                <div class="status-indicator"><span class="pulse-dot camera-dot"></span> CAMERA CONNECTED</div>
+                <div class="status-indicator"><span class="pulse-dot ai-dot"></span> AI ENGINE ACTIVE</div>
+            </div>
+            <div class="cg-header-right">
+                <div class="cg-clock" id="live-clock">
+                    <div class="cg-clock-date" id="clock-date">-- --- ----</div>
+                    <div class="cg-clock-time" id="clock-time">--:--:--</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <div class="cg-grid">
+            
+            <!-- LEFT COLUMN -->
+            <div class="cg-col left-col">
+                
+                <!-- CONTROLS -->
+                <div class="glass-panel controls-panel">
+                    <select id="video-source">
+                        <option value="">Loading videos...</option>
+                        <option value="camera">Webcam</option>
+                    </select>
+                    <label class="btn btn-secondary" style="cursor: pointer;">
+                        Upload Video
+                        <input type="file" id="video-upload" accept="video/*" style="display: none;">
+                    </label>
+                    <button id="btn-start" class="btn btn-primary">▶ Start</button>
+                    <button id="btn-stop" class="btn btn-secondary">⏹ Stop</button>
+                </div>
+                
+                <!-- VIDEO & TRACKING -->
+                <div class="glass-panel video-panel">
+                    <div class="video-container">
+                        <!-- Raw MJPEG Stream -->
+                        <img id="video-feed" src="/static/placeholder.jpg" alt="Video Feed">
+                        <!-- Canvas for Heatmap (beneath tracking) -->
+                        <canvas id="heatmap-canvas"></canvas>
+                        <!-- Canvas for Tracking & Flow (above heatmap) -->
+                        <canvas id="tracking-canvas"></canvas>
+                        
+                        <div class="video-timeline">
+                            <div class="timeline-info">
+                                <span>VIDEO TIME: <span id="v-time">00:00</span></span>
+                                <span>FRAME: <span id="v-frame">0</span></span>
+                                <span>FPS: <span id="v-fps">0</span></span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill" id="v-progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- METRICS -->
+                <div class="metrics-grid">
+                    <div class="metric-card glass-panel">
+                        <div class="m-label">PEOPLE DETECTED</div>
+                        <div class="m-value" id="m-people">0</div>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <div class="m-label">CURRENT DENSITY</div>
+                        <div class="m-value" id="m-density">0%</div>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <div class="m-label">AVERAGE SPEED</div>
+                        <div class="m-value" id="m-speed">0 px/s</div>
+                    </div>
+                    <div class="metric-card glass-panel">
+                        <div class="m-label">DOMINANT FLOW</div>
+                        <div class="m-value" id="m-flow">--</div>
+                    </div>
+                    <div class="metric-card glass-panel risk-card" id="risk-card">
+                        <div class="m-label">RISK LEVEL</div>
+                        <div class="m-value" id="m-risk">STANDBY</div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- RIGHT COLUMN -->
+            <div class="cg-col right-col">
+                
+                <!-- 3D VENUE MAP -->
+                <div class="glass-panel map-panel">
+                    <h3>3D ROUTE & CROWD ANALYSIS</h3>
+                    <div class="map-controls">
+                        <button class="btn btn-small" onclick="setMapView('top')">TOP</button>
+                        <button class="btn btn-small" onclick="setMapView('angle')">ANGLE</button>
+                        <button class="btn btn-small" onclick="setMapView('reset')">RESET</button>
+                    </div>
+                    <div class="map-container" id="map-container">
+                        <!-- CSS 3D structure will be built by JS -->
+                        <div id="venue-3d" class="venue-3d angle-view">
+                            <!-- Zones -->
+                            <div class="zone3d" id="zone-A" style="transform: translate3d(0, 0, 0)"><span>ZONE A</span><div class="zone-heatmap"></div></div>
+                            <div class="zone3d" id="zone-B" style="transform: translate3d(120px, 0, 0)"><span>ZONE B</span><div class="zone-heatmap"></div></div>
+                            <div class="zone3d" id="zone-C" style="transform: translate3d(240px, 0, 0)"><span>ZONE C</span><div class="zone-heatmap"></div></div>
+                            <!-- Exits -->
+                            <div class="exit3d" id="exit-A" style="transform: translate3d(-60px, 100px, 0)">EXIT A</div>
+                            <div class="exit3d" id="exit-B" style="transform: translate3d(300px, 100px, 0)">EXIT B</div>
+                            <!-- Route SVG overlay -->
+                            <svg id="route-svg" class="route-svg" width="100%" height="100%">
+                                <path id="route-path" d="" fill="none" stroke="#00d4ff" stroke-width="3" stroke-dasharray="10" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="live-analysis-overlay">
+                        <div class="la-row"><span>Active Zones:</span> <span id="la-zones">3</span></div>
+                        <div class="la-row"><span>Counter-Flow:</span> <span id="la-cf">NO</span></div>
+                    </div>
+                </div>
+                
+                <!-- ROUTE ANALYSIS -->
+                <div class="glass-panel route-analysis-panel">
+                    <h3>ROUTE ANALYSIS</h3>
+                    <div id="route-details" class="route-details">
+                        Awaiting route calculation...
+                    </div>
+                </div>
+
+                <!-- INCIDENT TIMELINE -->
+                <div class="glass-panel timeline-panel">
+                    <h3>INCIDENT TIMELINE</h3>
+                    <div class="timeline-container" id="timeline-container">
+                        <!-- Events injected here -->
+                    </div>
+                </div>
+                
+                <!-- SESSION SUMMARY -->
+                <div class="glass-panel session-panel">
+                    <h3>SESSION SUMMARY</h3>
+                    <div class="session-grid">
+                        <div><div class="s-label">DURATION</div><div class="s-value" id="s-duration">00:00</div></div>
+                        <div><div class="s-label">PEAK PEOPLE</div><div class="s-value" id="s-peak-people">0</div></div>
+                        <div><div class="s-label">PEAK DENSITY</div><div class="s-value" id="s-peak-density">0%</div></div>
+                        <div><div class="s-label">ROUTE CHANGES</div><div class="s-value" id="s-routes">0</div></div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    <script src="/static/main.js"></script>
+</body>
+</html>

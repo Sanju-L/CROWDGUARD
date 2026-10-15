@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CrowdGuard AI — Real-time crowd management and stampede prevention command center with 3D site mapping, pressure wave analysis, and intelligent exit routing.">
+    <title>CROWDGUARD | AI Crowd Management Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+    <!-- AMBIENT BACKGROUND -->
+    <div id="ambient-bg"></div>
+    <canvas id="bg-particles-canvas"></canvas>
+
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="loader-logo">CROWDGUARD</div>
+            <div class="loader-subtitle">AI CROWD MANAGEMENT SYSTEM</div>
+            <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+            <div class="loader-status" id="loader-status">Initializing Neural Engine...</div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div class="dashboard" id="dashboard">
+
+        <!-- ═══════════ TOP BAR ═══════════ -->
+        <header class="top-bar glass-panel" id="top-bar">
+            <div class="tb-left">
+                <div class="tb-logo">
+                    <svg class="logo-icon" viewBox="0 0 32 32" width="28" height="28">
+                        <circle cx="16" cy="16" r="14" fill="none" stroke="url(#logoGrad)" stroke-width="2"/>
+                        <circle cx="16" cy="16" r="8" fill="none" stroke="url(#logoGrad)" stroke-width="1.5" stroke-dasharray="4 3"/>
+                        <circle cx="16" cy="16" r="3" fill="url(#logoGrad)"/>
+                        <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+                            <stop offset="0%" stop-color="#00d4ff"/><stop offset="100%" stop-color="#7c4dff"/>
+                        </linearGradient></defs>
+                    </svg>
+                    <div>
+                        <h1>CROWDGUARD</h1>
+                        <div class="tb-tagline">AI CROWD MANAGEMENT SYSTEM</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tb-center">
+                <div class="status-badge live-badge" id="live-badge">
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-dot-inner"></span>
+                    LIVE
+                </div>
+                <div class="status-badge connected-badge" id="backend-status">
+                    <span class="status-dot idle-dot"></span>
+                    BACKEND CHECKING
+                </div>
+                <div class="status-badge ai-badge" id="ai-status">
+                    <span class="status-dot idle-dot"></span>
+                    AI WAITING
+                </div>
+                <div class="status-badge camera-badge" id="camera-online-badge">
+                    <span class="status-dot cyan-dot"></span>
+                    <span id="camera-online-status">CAMERAS ONLINE: 0</span>
+                </div>
+            </div>
+            <div class="tb-right">
+                <div class="tb-clock">
+                    <div class="clock-date" id="clock-date">02 OCT 2026</div>
+                    <div class="clock-time" id="clock-time">10:36:21</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ═══════════ MAIN CONTENT ═══════════ -->
+        <div class="main-content">
+
+            <!-- ──── LEFT PANEL ──── -->
+            <aside class="left-panel" id="left-panel">
+
+                <div class="panel-section glass-panel metrics-panel" id="metrics-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span>CROWD METRICS</span>
+                    </div>
+                    <div class="metric-cards">
+                        <div class="metric-card" id="mc-people">
+                            <div class="mc-icon">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#00d4ff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                            </div>
+                            <div class="mc-label">TOTAL PEOPLE</div>
+                            <div class="mc-value" id="metric-people">0</div>
+                            <div class="mc-bar"><div class="mc-bar-fill" id="bar-people" style="width: 0%"></div></div>
+                        </div>
+                        <div class="metric-card" id="mc-density">
+                            <div class="mc-icon">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ff6b35" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                            </div>
+                            <div class="mc-label">CURRENT DENSITY</div>
+                            <div class="mc-value" id="metric-density">0<span class="mc-unit">%</span></div>
+                            <div class="mc-bar"><div class="mc-bar-fill density-bar" id="bar-density" style="width: 0%"></div></div>
+                        </div>
+                        <div class="metric-card" id="mc-alerts">
+                            <div class="mc-icon">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffab00" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            </div>
+                            <div class="mc-label">ACTIVE ALERTS</div>
+                            <div class="mc-value" id="metric-alerts">0</div>
+                        </div>
+                        <div class="metric-card" id="mc-critical">
+                            <div class="mc-icon">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ff1744" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <div class="mc-label">CRITICAL ZONES</div>
+                            <div class="mc-value" id="metric-critical">0</div>
+                        </div>
+                        <div class="metric-card" id="mc-flowrate">
+                            <div class="mc-icon">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#00e676" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            </div>
+                            <div class="mc-label">FLOW RATE</div>
+                            <div class="mc-value" id="metric-flowrate">0<span class="mc-unit"> p/min</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ZONE STATUS -->
+                <div class="panel-section glass-panel zone-panel" id="zone-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        <span>ZONE STATUS</span>
+                    </div>
+                    <div class="zone-list" id="zone-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- EXIT STATUS -->
+                <div class="panel-section glass-panel exit-panel" id="exit-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        <span>DETECTED GATES</span>
+                    </div>
+                    <div class="exit-list" id="exit-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- ──── CENTER PANEL (Video + Map) ──── -->
+            <main class="center-panel" id="center-panel">
+
+                <!-- ═══ LIVE MULTI-CAMERA MONITORING ═══ -->
+                <section class="multi-camera-wrapper glass-panel" aria-labelledby="multi-camera-title">
+                    <div class="multi-camera-toolbar">
+                        <div class="toolbar-title" id="multi-camera-title">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>
+                            LIVE MULTI-CAMERA MONITORING
+                            <span class="camera-count" id="camera-count">0 CAMERAS</span>
+                        </div>
+                        <span class="multi-camera-note" id="camera-summary">Add live cameras to analyze separate venue areas.</span>
+                    </div>
+                    <form class="camera-add-form" id="camera-add-form">
+                        <label class="camera-field">
+                            <span>Camera name</span>
+                            <input id="camera-name" type="text" maxlength="48" placeholder="North entrance" autocomplete="off">
+                        </label>
+                        <label class="camera-field">
+                            <span>Source type</span>
+                            <select id="camera-source-type">
+                                <option value="device">Webcam / device</option>
+                                <option value="stream">RTSP / HTTP stream</option>
+                            </select>
+                        </label>
+                        <label class="camera-field camera-source-field">
+                            <span id="camera-source-label">Device index</span>
+                            <input id="camera-source" type="text" inputmode="numeric" value="0" placeholder="0 or rtsp://...">
+                        </label>
+                        <label class="camera-field">
+                            <span>Venue area</span>
+                            <select id="camera-area">
+                                <option value="Zone A">Zone A</option>
+                                <option value="Zone B">Zone B</option>
+                                <option value="Zone C">Zone C</option>
+                                <option value="Zone D">Zone D</option>
+                            </select>
+                        </label>
+                        <button class="ctrl-btn camera-add-button" id="camera-add-button" type="submit">Add camera</button>
+                    </form>
+                    <div class="camera-error" id="camera-error" role="status" aria-live="polite"></div>
+                    <div class="camera-grid" id="camera-grid">
+                        <div class="camera-empty-state">Connect one or more webcams or network camera streams to begin multi-area analysis.</div>
+                    </div>
+                    <div class="camera-directions" id="camera-directions" aria-live="polite">
+                        <div class="camera-directions-title">CROWD DIRECTION RECOMMENDATIONS</div>
+                        <div id="camera-direction-list">Recommendations appear after a camera is analyzing its assigned area.</div>
+                        <div class="camera-recommendation-note" id="camera-recommendation-note"></div>
+                    </div>
+                </section>
+
+                <!-- ═══ VIDEO ANALYSIS PANEL ═══ -->
+                <div class="video-analysis-wrapper glass-panel" id="video-analysis-wrapper">
+                    <div class="video-toolbar">
+                        <div class="toolbar-left">
+                            <span class="toolbar-title">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                                AI VIDEO ANALYSIS
+                            </span>
+                            <span class="video-status-badge" id="video-status-badge">
+                                <span class="status-dot" id="video-status-dot"></span>
+                                <span id="video-status-text">NO VIDEO</span>
+                            </span>
+                        </div>
+                        <div class="toolbar-controls">
+                            <label class="ctrl-btn upload-btn" for="video-file-input" title="Upload Video">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <span>Upload</span>
+                            </label>
+                            <input type="file" id="video-file-input" accept="video/*" style="display:none">
+                            <button class="ctrl-btn" id="btn-video-play" title="Play" disabled>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                <span>Play</span>
+                            </button>
+                            <button class="ctrl-btn" id="btn-video-pause" title="Pause" disabled>
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                <span>Pause</span>
+                            </button>
+                            <div class="toolbar-divider"></div>
+                            <button class="ctrl-btn toggle-btn active" id="btn-toggle-tracking" title="Toggle Tracking">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <span>Track</span>
+                            </button>
+                            <button class="ctrl-btn toggle-btn active" id="btn-toggle-video-heatmap" title="Toggle Video Heatmap">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c-4 4-8 7.33-8 12a8 8 0 0 0 16 0c0-4.67-4-8-8-12z"/></svg>
+                                <span>Heat</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="video-content">
+                        <div class="video-player-container" id="video-player-container">
+                            <video id="video-element" crossorigin="anonymous" preload="metadata" muted loop></video>
+                            <canvas id="video-heatmap-canvas" class="video-overlay-canvas"></canvas>
+                            <canvas id="video-tracking-canvas" class="video-overlay-canvas"></canvas>
+                            <!-- AI Detection Overlay -->
+                            <div class="video-ai-overlay" id="video-ai-overlay">
+                                <!-- Detection boxes rendered by JS -->
+                            </div>
+                            <!-- Placeholder when no video -->
+                            <div class="video-placeholder" id="video-placeholder">
+                                <div class="vp-icon">
+                                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                                </div>
+                                <div class="vp-text">Upload a crowd video for AI analysis</div>
+                                <div class="vp-subtext">Supports MP4, WebM, AVI formats</div>
+                                <label class="vp-upload-btn" for="video-file-input">Choose Video File</label>
+                            </div>
+                            <!-- Video Info Bar -->
+                            <div class="video-info-bar" id="video-info-bar" style="display:none">
+                                <div class="vib-left">
+                                    <span>TIME: <span id="vid-time">00:00</span></span>
+                                    <span>FRAME: <span id="vid-frame">0</span></span>
+                                    <span>FPS: <span id="vid-fps">0</span></span>
+                                </div>
+                                <div class="vib-right">
+                                    <span>DETECTED: <span id="vid-people" class="highlight-num">0</span></span>
+                                    <span>DENSITY: <span id="vid-density" class="highlight-num">0%</span></span>
+                                </div>
+                            </div>
+                            <div class="video-progress" id="video-progress" style="display:none">
+                                <div class="video-progress-fill" id="video-progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ 3D SITE MAP ═══ -->
+                <div class="map-wrapper glass-panel" id="map-wrapper">
+                    <!-- Map Controls Toolbar -->
+                    <div class="map-toolbar" id="map-toolbar">
+                        <div class="toolbar-left">
+                            <span class="toolbar-title">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                                3D SITE MAP — LIVE MONITORING
+                            </span>
+                            <span class="map-zoom-label" id="zoom-label">100%</span>
+                        </div>
+                        <div class="toolbar-controls">
+                            <button class="ctrl-btn" id="btn-zoom-in" title="Zoom In">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            </button>
+                            <button class="ctrl-btn" id="btn-zoom-out" title="Zoom Out">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            </button>
+                            <button class="ctrl-btn" id="btn-reset-view" title="Reset View">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                            </button>
+                            <div class="toolbar-divider"></div>
+                            <button class="ctrl-btn toggle-btn active" id="btn-toggle-heatmap" title="Toggle Heatmap">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2c-4 4-8 7.33-8 12a8 8 0 0 0 16 0c0-4.67-4-8-8-12z"/></svg>
+                                <span>Heat</span>
+                            </button>
+                            <button class="ctrl-btn toggle-btn active" id="btn-toggle-flow" title="Toggle Flow">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                <span>Flow</span>
+                            </button>
+                            <button class="ctrl-btn toggle-btn" id="btn-toggle-pressure" title="Toggle Pressure Wave">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                                <span>Pressure</span>
+                            </button>
+                            <button class="ctrl-btn toggle-btn" id="btn-toggle-routes" title="Toggle Safe Routes">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                                <span>Routes</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3D Map Container -->
+                    <div class="map-viewport" id="map-viewport">
+                        <div class="map-scene" id="map-scene">
+                            <!-- SVG Map Layer -->
+                            <svg id="map-svg" class="map-svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+                                <defs>
+                                    <!-- Gradients -->
+                                    <linearGradient id="roadGrad" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stop-color="#2a3040"/>
+                                        <stop offset="50%" stop-color="#3a4050"/>
+                                        <stop offset="100%" stop-color="#2a3040"/>
+                                    </linearGradient>
+                                    <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#0a2a3a"/>
+                                        <stop offset="100%" stop-color="#0d3548"/>
+                                    </linearGradient>
+                                    <linearGradient id="bridgeGrad" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stop-color="#4a5568"/>
+                                        <stop offset="50%" stop-color="#5a6578"/>
+                                        <stop offset="100%" stop-color="#4a5568"/>
+                                    </linearGradient>
+                                    <filter id="glow">
+                                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                    </filter>
+                                    <filter id="softGlow">
+                                        <feGaussianBlur stdDeviation="6" result="blur"/>
+                                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                                    </filter>
+                                    <radialGradient id="exitPulseGrad" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#00e676" stop-opacity="0.6"/>
+                                        <stop offset="100%" stop-color="#00e676" stop-opacity="0"/>
+                                    </radialGradient>
+                                    <pattern id="gridPattern" width="40" height="40" patternUnits="userSpaceOnUse">
+                                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,212,255,0.04)" stroke-width="0.5"/>
+                                    </pattern>
+                                </defs>
+
+                                <!-- Background Grid -->
+                                <rect width="1200" height="800" fill="url(#gridPattern)"/>
+
+                                <!-- ═══ WATER / RIVER (top area) ═══ -->
+                                <path d="M 0 0 L 1200 0 L 1200 120 Q 1000 140 800 110 Q 600 80 400 120 Q 200 160 0 130 Z" fill="url(#waterGrad)" opacity="0.7"/>
+                                <path d="M 0 115 Q 200 155 400 115 Q 600 75 800 105 Q 1000 135 1200 115" fill="none" stroke="#0d6e8f" stroke-width="1" opacity="0.5"/>
+                                <!-- River animated shimmer lines added in JS -->
+
+                                <!-- ═══ MAIN GROUND / OPEN AREA ═══ -->
+                                <rect x="0" y="120" width="1200" height="680" fill="#151b28" opacity="0.5"/>
+
+                                <!-- ═══ BRIDGE (spanning the river) ═══ -->
+                                <g id="bridge-group">
+                                    <rect x="430" y="50" width="340" height="130" rx="4" fill="url(#bridgeGrad)" opacity="0.8" stroke="#5a6a7a" stroke-width="1"/>
+                                    <line x1="440" y1="50" x2="440" y2="180" stroke="#6a7a8a" stroke-width="1" opacity="0.5"/>
+                                    <line x1="500" y1="50" x2="500" y2="180" stroke="#6a7a8a" stroke-width="1" opacity="0.5"/>
+                                    <line x1="560" y1="50" x2="560" y2="180" stroke="#6a7a8a" stroke-width="1" opacity="0.5"/>
+                                    <line x1="620" y1="50" x2="620" y2="180" stroke="#6a7a8a" stroke-width="1" opacity="0.5"/>
+                                    <line x1="680" y1="50" x2="680" y2="180" stroke="#6a7a8a" stroke-width="1" opacity="0.5"/>
+                                    <line x1="740" y1="50" x2="740" y2="180" stroke="#6a7a8a" stroke-width="1" opacity="0.5"/>
+                                    <text x="600" y="105" text-anchor="middle" fill="#8a9ab0" font-size="10" font-family="Orbitron" letter-spacing="3">BRIDGE</text>
+                                    <!-- Bridge railings -->
+                                    <line x1="430" y1="50" x2="770" y2="50" stroke="#7a8a9a" stroke-width="2"/>
+                                    <line x1="430" y1="180" x2="770" y2="180" stroke="#7a8a9a" stroke-width="2"/>
+                                </g>
+
+                                <!-- ═══ MAIN ROADS ═══ -->
+                                <!-- Vertical Main Road (center) -->
+                                <rect x="570" y="180" width="60" height="620" fill="url(#roadGrad)" opacity="0.6"/>
+                                <line x1="600" y1="180" x2="600" y2="800" stroke="#4a5a6a" stroke-width="1" stroke-dasharray="8 12" opacity="0.4"/>
+
+                                <!-- Horizontal Road (upper) -->
+                                <rect x="0" y="280" width="1200" height="50" fill="url(#roadGrad)" opacity="0.5"/>
+                                <line x1="0" y1="305" x2="1200" y2="305" stroke="#4a5a6a" stroke-width="1" stroke-dasharray="8 12" opacity="0.4"/>
+
+                                <!-- Horizontal Road (lower) -->
+                                <rect x="0" y="530" width="1200" height="50" fill="url(#roadGrad)" opacity="0.5"/>
+                                <line x1="0" y1="555" x2="1200" y2="555" stroke="#4a5a6a" stroke-width="1" stroke-dasharray="8 12" opacity="0.4"/>
+
+                                <!-- Side roads -->
+                                <rect x="180" y="280" width="45" height="300" fill="url(#roadGrad)" opacity="0.4"/>
+                                <rect x="975" y="280" width="45" height="300" fill="url(#roadGrad)" opacity="0.4"/>
+
+                                <!-- ═══ BUILDINGS / STRUCTURES ═══ -->
+                                <!-- Left buildings (top row) -->
+                                <g class="building" id="bldg-1">
+                                    <rect x="40" y="150" width="120" height="110" rx="3" fill="#1a2235" stroke="#2a3a4a" stroke-width="1"/>
+                                    <rect x="50" y="160" width="30" height="20" rx="1" fill="#0d1520" opacity="0.6"/>
+                                    <rect x="90" y="160" width="30" height="20" rx="1" fill="#0d1520" opacity="0.6"/>
+                                    <rect x="50" y="190" width="30" height="20" rx="1" fill="#0d1520" opacity="0.6"/>
+                                    <rect x="90" y="190" width="30" height="20" rx="1" fill="#0d1520" opacity="0.6"/>
+                                    <text x="100" y="245" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="Inter">BLOCK A</text>
+                                </g>
+                                <g class="building" id="bldg-2">
+                                    <rect x="240" y="150" width="150" height="110" rx="3" fill="#1a2235" stroke="#2a3a4a" stroke-width="1"/>
+                                    <text x="315" y="210" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="Inter">ADMIN BUILDING</text>
+                                </g>
+
+                                <!-- Right buildings (top row) -->
+                                <g class="building" id="bldg-3">
+                                    <rect x="810" y="150" width="150" height="110" rx="3" fill="#1a2235" stroke="#2a3a4a" stroke-width="1"/>
+                                    <text x="885" y="210" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="Inter">MEDICAL CENTER</text>
+                                </g>
+                                <g class="building" id="bldg-4">
+                                    <rect x="1040" y="150" width="120" height="110" rx="3" fill="#1a2235" stroke="#2a3a4a" stroke-width="1"/>
+                                    <text x="1100" y="210" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="Inter">BLOCK B</text>
+                                </g>
+
+                                <!-- Central structure (stage/monument) -->
+                                <g class="building" id="central-monument">
+                                    <circle cx="600" cy="420" r="35" fill="#1a2235" stroke="#3a4a5a" stroke-width="1.5"/>
+                                    <circle cx="600" cy="420" r="18" fill="#0d1520" stroke="#2a3a4a" stroke-width="1"/>
+                                    <text x="600" y="425" text-anchor="middle" fill="#6a7a8a" font-size="7" font-family="Orbitron">STAGE</text>
+                                </g>
+
+                                <!-- Lower buildings -->
+                                <g class="building" id="bldg-5">
+                                    <rect x="40" y="600" width="130" height="90" rx="3" fill="#1a2235" stroke="#2a3a4a" stroke-width="1"/>
+                                    <text x="105" y="650" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="Inter">BLOCK C</text>
+                                </g>
+                                <g class="building" id="bldg-6">
+                                    <rect x="1030" y="600" width="130" height="90" rx="3" fill="#1a2235" stroke="#2a3a4a" stroke-width="1"/>
+                                    <text x="1095" y="650" text-anchor="middle" fill="#5a6a7a" font-size="8" font-family="Inter">BLOCK D</text>
+                                </g>
+
+                                <!-- Barriers -->
+                                <line x1="230" y1="350" x2="230" y2="510" stroke="#ff6b35" stroke-width="2" stroke-dasharray="5 5" opacity="0.4"/>
+                                <line x1="970" y1="350" x2="970" y2="510" stroke="#ff6b35" stroke-width="2" stroke-dasharray="5 5" opacity="0.4"/>
+
+                                <!-- ═══ ZONE OVERLAYS ═══ -->
+                                <g id="zone-overlays">
+                                    <!-- Zone A: Top-Left -->
+                                    <rect class="zone-overlay" id="zone-A-overlay" x="5" y="180" width="565" height="100" rx="4" fill="rgba(0,230,118,0.05)" stroke="rgba(0,230,118,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+                                    <text x="285" y="235" text-anchor="middle" fill="rgba(0,230,118,0.4)" font-size="11" font-family="Orbitron" letter-spacing="2">ZONE A</text>
+
+                                    <!-- Zone B: Top-Right -->
+                                    <rect class="zone-overlay" id="zone-B-overlay" x="630" y="180" width="565" height="100" rx="4" fill="rgba(0,212,255,0.05)" stroke="rgba(0,212,255,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+                                    <text x="912" y="235" text-anchor="middle" fill="rgba(0,212,255,0.4)" font-size="11" font-family="Orbitron" letter-spacing="2">ZONE B</text>
+
+                                    <!-- Zone C: Middle-Left -->
+                                    <rect class="zone-overlay" id="zone-C-overlay" x="5" y="330" width="565" height="200" rx="4" fill="rgba(255,171,0,0.05)" stroke="rgba(255,171,0,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+                                    <text x="285" y="435" text-anchor="middle" fill="rgba(255,171,0,0.4)" font-size="11" font-family="Orbitron" letter-spacing="2">ZONE C</text>
+
+                                    <!-- Zone D: Middle-Right -->
+                                    <rect class="zone-overlay" id="zone-D-overlay" x="630" y="330" width="565" height="200" rx="4" fill="rgba(124,77,255,0.05)" stroke="rgba(124,77,255,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+                                    <text x="912" y="435" text-anchor="middle" fill="rgba(124,77,255,0.4)" font-size="11" font-family="Orbitron" letter-spacing="2">ZONE D</text>
+
+                                    <!-- Zone E: Bottom area -->
+                                    <rect class="zone-overlay" id="zone-E-overlay" x="5" y="580" width="1190" height="120" rx="4" fill="rgba(255,107,53,0.05)" stroke="rgba(255,107,53,0.2)" stroke-width="1" stroke-dasharray="4 4"/>
+                                    <text x="600" y="645" text-anchor="middle" fill="rgba(255,107,53,0.4)" font-size="11" font-family="Orbitron" letter-spacing="2">ZONE E</text>
+                                </g>
+
+                                <!-- ═══ HEATMAP LAYER (Canvas overlay added by JS) ═══ -->
+
+                                <!-- ═══ FLOW ARROWS LAYER ═══ -->
+                                <g id="flow-arrows-layer" class="flow-layer">
+                                    <!-- Populated by JS -->
+                                </g>
+
+                                <!-- ═══ PRESSURE WAVE LAYER ═══ -->
+                                <g id="pressure-wave-layer" class="pressure-layer" style="display:none">
+                                    <!-- Animated pressure waves added by JS -->
+                                </g>
+
+                                <!-- ═══ SAFE ROUTES LAYER ═══ -->
+                                <g id="safe-routes-layer" class="routes-layer" style="display:none">
+                                    <!-- Animated route paths added by JS -->
+                                </g>
+
+                                <!-- ═══ CROWD PARTICLES LAYER ═══ -->
+                                <g id="crowd-particles-layer">
+                                    <!-- Particles populated by JS -->
+                                </g>
+
+                                <!-- ═══ DETECTED GATES (camera-image projection) ═══ -->
+                                <g id="detected-gates-layer" aria-label="AI detected gate boundaries">
+                                    <title>Gate outlines are projected from normalized camera-frame coordinates onto this map view.</title>
+                                </g>
+                            </svg>
+
+                            <!-- Heatmap Canvas Overlay -->
+                            <canvas id="heatmap-canvas" class="heatmap-canvas"></canvas>
+
+                        </div>
+                    </div>
+
+                    <!-- Map Info Overlay -->
+                    <div class="map-info-overlay" id="map-info-overlay">
+                        <div class="info-item">
+                            <span class="info-label">ACTIVE ZONES</span>
+                            <span class="info-value" id="info-zones">5</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">COUNTER FLOW</span>
+                            <span class="info-value warning-text" id="info-counterflow">NO</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">COMPRESSION</span>
+                            <span class="info-value" id="info-compression">LOW</span>
+                        </div>
+                    </div>
+
+                    <!-- Radar Scan Effect -->
+                    <div class="radar-scan" id="radar-scan"></div>
+                </div>
+
+                <!-- Density Timeline (below map) -->
+                <div class="timeline-chart glass-panel" id="timeline-chart-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <span>CROWD DENSITY TIMELINE</span>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-dot" style="background:#00e676"></span>Safe</span>
+                            <span class="legend-item"><span class="legend-dot" style="background:#ffab00"></span>Warning</span>
+                            <span class="legend-item"><span class="legend-dot" style="background:#ff1744"></span>Critical</span>
+                        </div>
+                    </div>
+                    <canvas id="density-chart" class="density-chart-canvas"></canvas>
+                </div>
+            </main>
+
+            <!-- ──── RIGHT PANEL ──── -->
+            <aside class="right-panel" id="right-panel">
+
+                <!-- AI Risk Analysis -->
+                <div class="panel-section glass-panel risk-panel" id="risk-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span>AI RISK ANALYSIS</span>
+                    </div>
+                    <div class="risk-gauge" id="risk-gauge">
+                        <svg viewBox="0 0 200 120" class="gauge-svg">
+                            <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1a2235" stroke-width="12" stroke-linecap="round"/>
+                            <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="0 251"/>
+                            <defs><linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stop-color="#00e676"/><stop offset="50%" stop-color="#ffab00"/><stop offset="100%" stop-color="#ff1744"/>
+                            </linearGradient></defs>
+                            <text x="100" y="85" text-anchor="middle" fill="#e8eaed" font-size="28" font-family="Orbitron" font-weight="700" id="gauge-value">0</text>
+                            <text x="100" y="105" text-anchor="middle" fill="#5a6a7a" font-size="10" font-family="Inter">RISK SCORE</text>
+                        </svg>
+                    </div>
+                    <div class="risk-level-badge" id="risk-level-badge">
+                        <span class="risk-dot"></span>
+                        <span id="risk-level-text">SAFE</span>
+                    </div>
+                    <div class="risk-details">
+                        <div class="risk-row">
+                            <span>Density Factor</span>
+                            <span id="risk-density">0%</span>
+                        </div>
+                        <div class="risk-row">
+                            <span>Counter-Flow</span>
+                            <span id="risk-counterflow">None</span>
+                        </div>
+                        <div class="risk-row">
+                            <span>Bottleneck Risk</span>
+                            <span id="risk-bottleneck">Low</span>
+                        </div>
+                        <div class="risk-row">
+                            <span>Flow Instability</span>
+                            <span id="risk-instability">Stable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crowd Pressure Prediction -->
+                <div class="panel-section glass-panel pressure-panel" id="pressure-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        <span>PRESSURE WAVE PREDICTOR</span>
+                    </div>
+                    <div class="pressure-info">
+                        <div class="pressure-row">
+                            <span class="p-label">Predicted Pressure</span>
+                            <span class="p-value" id="pressure-value">LOW</span>
+                        </div>
+                        <div class="pressure-row">
+                            <span class="p-label">Risk Level</span>
+                            <span class="p-value" id="pressure-risk">MINIMAL</span>
+                        </div>
+                        <div class="pressure-row">
+                            <span class="p-label">Affected Zone</span>
+                            <span class="p-value" id="pressure-zone">—</span>
+                        </div>
+                        <div class="pressure-row">
+                            <span class="p-label">Early Warning</span>
+                            <span class="p-value" id="pressure-warning">—</span>
+                        </div>
+                        <div class="pressure-wave-viz" id="pressure-wave-viz">
+                            <div class="pw-bar" style="--delay: 0s"></div>
+                            <div class="pw-bar" style="--delay: 0.1s"></div>
+                            <div class="pw-bar" style="--delay: 0.2s"></div>
+                            <div class="pw-bar" style="--delay: 0.3s"></div>
+                            <div class="pw-bar" style="--delay: 0.4s"></div>
+                            <div class="pw-bar" style="--delay: 0.5s"></div>
+                            <div class="pw-bar" style="--delay: 0.6s"></div>
+                            <div class="pw-bar" style="--delay: 0.7s"></div>
+                        </div>
+                    </div>
+                    <div class="pressure-disclaimer">
+                        AI-based early-warning mechanism. Does not guarantee stampede prevention.
+                    </div>
+                </div>
+
+                <!-- Recommended Actions -->
+                <div class="panel-section glass-panel actions-panel" id="actions-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span>RECOMMENDED ACTIONS</span>
+                    </div>
+                    <div class="action-list" id="action-list">
+                        <div class="action-item safe">
+                            <div class="action-icon">✓</div>
+                            <div class="action-text">All zones operating within safe capacity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert History -->
+                <div class="panel-section glass-panel alerts-panel" id="alerts-panel">
+                    <div class="panel-header">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span>ALERT HISTORY</span>
+                    </div>
+                    <div class="alert-timeline" id="alert-timeline">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- ═══════════ BOTTOM BAR ═══════════ -->
+        <div class="bottom-bar" id="bottom-bar">
+            <div class="bottom-section glass-panel">
+                <div class="panel-header">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                    <span>ZONE STATISTICS & ACTIVITY LOG</span>
+                </div>
+                <div class="bottom-content">
+                    <div class="zone-stats" id="zone-stats">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="activity-log" id="activity-log">
+                        <div class="log-header">EVENT LOG</div>
+                        <div class="log-entries" id="log-entries">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXIT INFO POPUP -->
+    <div class="exit-popup" id="exit-popup" style="display:none">
+        <div class="exit-popup-header">
+            <span id="popup-exit-name">EXIT 1</span>
+            <button class="popup-close" id="popup-close">×</button>
+        </div>
+        <div class="exit-popup-body">
+            <div class="popup-row"><span>Crowd Density</span><span id="popup-density">Low</span></div>
+            <div class="popup-row"><span>Flow Direction</span><span id="popup-flow">Outward</span></div>
+            <div class="popup-row"><span>Exit Status</span><span id="popup-status" class="status-open">OPEN</span></div>
+            <div class="popup-row"><span>Est. Capacity</span><span id="popup-capacity">500 p/hr</span></div>
+            <div class="popup-row"><span>Recommended Route</span><span id="popup-route">Zone C → Exit 1</span></div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

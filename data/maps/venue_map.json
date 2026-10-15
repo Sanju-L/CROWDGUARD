@@ -1,0 +1,137 @@
+{
+  "_comment": "CrowdGuard venue graph definition. Loaded by routing/route_engine.py.",
+  "_layout": [
+    "              ENTRANCE              ",
+    "              /      \\              ",
+    "          ZONE_A --- ZONE_B          ",
+    "            |  \\   /  |            ",
+    "          ZONE_C --- ZONE_D          ",
+    "            |           |            ",
+    "          EXIT_A     EXIT_B          "
+  ],
+
+  "nodes": [
+    {
+      "id": "ENTRANCE",
+      "name": "Main Entrance",
+      "type": "entrance",
+      "x": 300,
+      "y": 50
+    },
+    {
+      "id": "ZONE_A",
+      "name": "Zone A (Top-Left)",
+      "type": "zone",
+      "x": 150,
+      "y": 200
+    },
+    {
+      "id": "ZONE_B",
+      "name": "Zone B (Top-Right)",
+      "type": "zone",
+      "x": 450,
+      "y": 200
+    },
+    {
+      "id": "ZONE_C",
+      "name": "Zone C (Bottom-Left)",
+      "type": "zone",
+      "x": 150,
+      "y": 400
+    },
+    {
+      "id": "ZONE_D",
+      "name": "Zone D (Bottom-Right)",
+      "type": "zone",
+      "x": 450,
+      "y": 400
+    },
+    {
+      "id": "EXIT_A",
+      "name": "Exit A (South-West)",
+      "type": "exit",
+      "x": 100,
+      "y": 550
+    },
+    {
+      "id": "EXIT_B",
+      "name": "Exit B (South-East)",
+      "type": "exit",
+      "x": 500,
+      "y": 550
+    }
+  ],
+
+  "edges": [
+    {
+      "source": "ENTRANCE",
+      "target": "ZONE_A",
+      "distance": 200,
+      "base_cost": 1.0,
+      "status": "open"
+    },
+    {
+      "source": "ENTRANCE",
+      "target": "ZONE_B",
+      "distance": 200,
+      "base_cost": 1.0,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_A",
+      "target": "ZONE_B",
+      "distance": 300,
+      "base_cost": 1.5,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_A",
+      "target": "ZONE_C",
+      "distance": 200,
+      "base_cost": 1.0,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_B",
+      "target": "ZONE_D",
+      "distance": 200,
+      "base_cost": 1.0,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_C",
+      "target": "ZONE_D",
+      "distance": 300,
+      "base_cost": 1.5,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_A",
+      "target": "ZONE_D",
+      "distance": 360,
+      "base_cost": 2.0,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_B",
+      "target": "ZONE_C",
+      "distance": 360,
+      "base_cost": 2.0,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_C",
+      "target": "EXIT_A",
+      "distance": 160,
+      "base_cost": 0.8,
+      "status": "open"
+    },
+    {
+      "source": "ZONE_D",
+      "target": "EXIT_B",
+      "distance": 160,
+      "base_cost": 0.8,
+      "status": "open"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+*.py[cod]
+.env
+.env.*
+data/videos/15034376_3840_2160_60fps (1).mp4
+data/videos/15034376_3840_2160_60fps.mp4

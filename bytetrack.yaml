@@ -1,0 +1,13 @@
+# ──────────────────────────────────────────────
+# CrowdGuard – ByteTrack Configuration
+# ──────────────────────────────────────────────
+# Used by Ultralytics model.track(tracker="bytetrack.yaml")
+
+tracker_type: bytetrack
+
+track_high_thresh: 0.15       # threshold for first association
+track_low_thresh: 0.05        # threshold for second association
+new_track_thresh: 0.18        # threshold for new track init
+track_buffer: 30             # frames to keep lost tracks alive
+match_thresh: 0.7            # IoU matching threshold
+fuse_score: True             # fuse confidence with IoU for matching

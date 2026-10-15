@@ -1,0 +1,23 @@
+# CrowdGuard - AI-based Real-Time Crowd Safety System
+# Python 3.11
+
+# Computer Vision & Detection
+opencv-python>=4.10.0
+ultralytics>=8.3.0
+
+# Object Tracking
+numpy>=1.26.0
+
+# Data Processing
+pandas>=2.2.0
+
+# Dashboard & Visualization
+flask>=3.0.0
+plotly>=5.24.0
+
+# Graph / Routing
+networkx>=3.3
+
+# Utilities
+Pillow>=10.4.0
+pyyaml>=6.0.2
