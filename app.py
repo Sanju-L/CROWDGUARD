@@ -241,7 +241,7 @@ def ai_loop():
             # Ensure every frame is annotated to avoid bounding box flickering
 
             # 1. Tracking & Gate Detection
-            tracker_state = pipeline['tracker'].update(frame)
+            tracker_state = pipeline['tracker'].update(frame, frame_number=frame_idx)
             pipeline['gate_detector'].update(frame, tracker_state.tracks)
 
             # 2. Density – expects list of (cx, cy) and (height, width)
@@ -359,7 +359,9 @@ def ai_loop():
                     'dx': pf.dx,
                     'dy': pf.dy,
                     'speed': pf.speed,
-                    'direction': pf.direction
+                    'direction': pf.direction,
+                    'cx': pf.center[0],
+                    'cy': pf.center[1]
                 })
 
             # Dominant flow direction
@@ -448,6 +450,7 @@ def ai_loop():
             # Draw tracking boxes on the frame before encoding
             # Draw gates first (underneath tracking boxes)
             annotated = pipeline['gate_detector'].draw(frame)
+            flow_by_id = {pf.track_id: pf for pf in person_flows}
             
             for t in tracker_state.tracks:
                 x1, y1, x2, y2 = t.bbox.astype(int)
@@ -480,6 +483,26 @@ def ai_loop():
                 cv2.rectangle(annotated, (x1, y1 - th - 8), (x1 + tw + 6, y1), (0, 0, 0), -1)
                 cv2.putText(annotated, label, (x1 + 3, y1 - 4),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+
+                # Mark each tracked person's current movement direction. A
+                # short vector keeps arrows readable even in dense scenes.
+                flow = flow_by_id.get(t.track_id)
+                if flow is not None and flow.speed > 0:
+                    vector_length = max(24, min(70, int(flow.speed * 2.5)))
+                    magnitude = max(math.hypot(flow.dx, flow.dy), 1e-6)
+                    end = (
+                        cx_pt + int(flow.dx / magnitude * vector_length),
+                        cy_pt + int(flow.dy / magnitude * vector_length),
+                    )
+                    direction_color = (0, 230, 255) if flow.direction != 'STATIONARY' else (180, 180, 180)
+                    cv2.arrowedLine(
+                        annotated, (cx_pt, cy_pt), end,
+                        direction_color, 2, cv2.LINE_AA, tipLength=0.3,
+                    )
+                    cv2.putText(
+                        annotated, flow.direction, (end[0] + 3, end[1] - 3),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, direction_color, 1, cv2.LINE_AA,
+                    )
             
             # Draw people count overlay
             count_text = f"TRACKED: {len(tracker_state.tracks)}"

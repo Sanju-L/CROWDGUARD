@@ -18,10 +18,11 @@ MAP_DIR = DATA_DIR / "maps"
 MODEL_DIR = BASE_DIR / "models"
 
 # ── Detection ─────────────────────────────────
-YOLO_MODEL_NAME: str = "yolo11n.pt"          # Ultralytics model identifier
-DETECTION_CONFIDENCE: float = 0.20           # min confidence for a detection (optimized for crowds)
-DETECTION_IOU_THRESHOLD: float = 0.45        # NMS IoU threshold
-DETECTION_IMAGE_SIZE: int = 512               # inference size balances CPU speed and crowd detail
+YOLO_MODEL_NAME: str = "yolo11s.pt"          # stronger bundled model for small/distant people
+DETECTION_CONFIDENCE: float = 0.12           # retain low-confidence people in dense scenes
+DETECTION_IOU_THRESHOLD: float = 0.50        # merge overlapping tile detections without suppressing neighbours
+DETECTION_IMAGE_SIZE: int = 640               # preserve detail for distant people
+DETECTION_FRAME_INTERVAL: int = 2             # infer every other frame; reuse tracks between scans
 PERSON_CLASS_ID: int = 0                     # COCO class-id for "person"
 
 # ── Tracking ──────────────────────────────────

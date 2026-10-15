@@ -1074,7 +1074,11 @@
         if (!displayGates.length) {
             const empty = document.createElement('div');
             empty.className = 'exit-item';
-            empty.textContent = state.videoLoaded ? 'No gates confirmed in this footage' : 'Upload footage to detect gates';
+            empty.textContent = state.videoLoaded && state.aiRunning
+                ? 'Scanning for physical gate geometry...'
+                : state.videoLoaded
+                    ? 'No gates confirmed in this footage'
+                    : 'Upload footage to detect gates';
             c.appendChild(empty);
             return;
         }

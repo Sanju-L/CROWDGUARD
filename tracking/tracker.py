@@ -28,6 +28,7 @@ from ultralytics import YOLO
 from config import (
     BASE_DIR,
     DETECTION_CONFIDENCE,
+    DETECTION_FRAME_INTERVAL,
     DETECTION_IMAGE_SIZE,
     DETECTION_IOU_THRESHOLD,
     PERSON_CLASS_ID,
@@ -161,17 +162,46 @@ class MultiObjectTracker:
 
         h, w = frame.shape[:2]
 
+        if (
+            DETECTION_FRAME_INTERVAL > 1
+            and self._active_tracks
+            and frame_number % DETECTION_FRAME_INTERVAL != 0
+        ):
+            current_tracks = []
+            for tid, track in self._active_tracks.items():
+                center = track["center"]
+                self._history[tid].append(center)
+                current_tracks.append(
+                    Track(
+                        track_id=tid,
+                        bbox=track["bbox"].copy(),
+                        center_x=center[0],
+                        center_y=center[1],
+                        confidence=track["conf"],
+                        frame_number=frame_number,
+                    )
+                )
+            return TrackerState(
+                tracks=current_tracks,
+                history=self._history,
+                active_ids=set(self._active_tracks),
+                total_unique_ids=len(self._seen_ids),
+            )
+
         # 1. Detect candidate people/crowd objects
         all_boxes: List[List[float]] = []
         all_scores: List[float] = []
 
-        if False: # TILING DISABLED FOR EXTREME SPEED
-            grid_r = 3 if h >= 1000 else 2
-            grid_c = 2 if w >= 700 else 1
+        # A 720p source is already a single inference-sized view. Tiling it
+        # quadruples model work and makes the live feed lag; reserve tiles for
+        # genuinely high-resolution footage where small people need them.
+        if h >= 1000:
+            grid_r = 3 if h >= 1400 else 2
+            grid_c = 2 if w >= 1000 else 1
 
             crop_h = h // grid_r
             crop_w = w // grid_c
-            overlap = 40
+            overlap = max(64, min(h, w) // 12)
 
             for r in range(grid_r):
                 for c in range(grid_c):
@@ -183,7 +213,7 @@ class MultiObjectTracker:
                     crop = frame[y1:y2, x1:x2]
                     res = self._model(
                         crop,
-                        imgsz=320, # Reduced size for speed
+                        imgsz=DETECTION_IMAGE_SIZE,
                         conf=self.confidence,
                         classes=self.classes,
                         verbose=False,
@@ -306,6 +336,23 @@ class MultiObjectTracker:
                     self._active_tracks[tid]["disappeared"] += 1
                     if self._active_tracks[tid]["disappeared"] > self.max_disappeared:
                         del self._active_tracks[tid]
+                    else:
+                        # Keep recently unmatched people visible while the
+                        # detector recovers them on a later scan.
+                        track = self._active_tracks[tid]
+                        center = track["center"]
+                        self._history[tid].append(center)
+                        active_ids.add(tid)
+                        current_tracks.append(
+                            Track(
+                                track_id=tid,
+                                bbox=track["bbox"].copy(),
+                                center_x=center[0],
+                                center_y=center[1],
+                                confidence=track["conf"],
+                                frame_number=frame_number,
+                            )
+                        )
 
                 # Unmatched detections -> new tracks
                 unused_cols = set(range(len(detections))) - used_cols
@@ -338,6 +385,21 @@ class MultiObjectTracker:
                     self._active_tracks[tid]["disappeared"] += 1
                     if self._active_tracks[tid]["disappeared"] > self.max_disappeared:
                         del self._active_tracks[tid]
+                    else:
+                        track = self._active_tracks[tid]
+                        center = track["center"]
+                        self._history[tid].append(center)
+                        active_ids.add(tid)
+                        current_tracks.append(
+                            Track(
+                                track_id=tid,
+                                bbox=track["bbox"].copy(),
+                                center_x=center[0],
+                                center_y=center[1],
+                                confidence=track["conf"],
+                                frame_number=frame_number,
+                            )
+                        )
 
         return TrackerState(
             tracks=current_tracks,

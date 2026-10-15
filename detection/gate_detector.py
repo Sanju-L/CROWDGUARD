@@ -34,7 +34,7 @@ class GateDetector:
 
     SCAN_INTERVAL = 10
     MIN_OBSERVATIONS = 2
-    MAX_MISSED_SCANS = 8
+    MAX_MISSED_SCANS = 20
 
     def __init__(self) -> None:
         self.gates: list[DetectedGate] = []
@@ -391,7 +391,7 @@ class GateDetector:
         result = []
         visible_gates = [
             gate for gate in self.gates
-            if gate.frames_seen >= self.MIN_OBSERVATIONS and gate.confidence >= 0.35
+            if gate.frames_seen >= self.MIN_OBSERVATIONS and gate.confidence >= 0.2
         ]
         visible_gates.sort(key=lambda gate: (gate.center[0], gate.center[1]))
         for index, gate in enumerate(visible_gates, start=1):
